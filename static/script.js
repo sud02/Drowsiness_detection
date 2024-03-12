@@ -4,27 +4,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const stopButton = document.getElementById('stopButton');
     const statusDisplay = document.getElementById('status');
     const ws = new WebSocket('ws://127.0.0.1:8000/ws');
-    const alertDisplay = document.getElementById('alertDisplay'); // Make sure to add this element in your HTML
+    const alertDisplay = document.getElementById('alertDisplay');
 
     ws.onopen = function(event) {
         console.log('Connection to server opened');
-    }
+    };
 
     ws.onmessage = function(event) {
         console.log('Message from server:', event.data);
         const data = JSON.parse(event.data);
-        statusDisplay.innerHTML = `Status: <span>${data}</span>`;
-
-        if (data.alert) {
-            // Show alert symbol with "Wake up" message
+        if (data.alert === "Drowsiness Detected!") {
             alertDisplay.style.display = 'block';
             alertDisplay.innerHTML = '<div class="alert-symbol">⚠️ Wake up!</div>';
-            // You might want to add some CSS styles for .alert-symbol to make it big and attention-grabbing
-        } else {
-            // Hide alert symbol when there is no alert
+        } else if (data.alert === "clear") {
+            console.log("Clearing alert"); // Confirm this log appears
             alertDisplay.style.display = 'none';
         }
-    }
+    };
 
     startButton.onclick = function() {
         navigator.mediaDevices.getUserMedia({ video: true })

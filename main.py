@@ -39,7 +39,7 @@ class DrowsinessDetection:
         if not self.running_event.is_set():
             self.running_event.set()
             self.cap = cv2.VideoCapture(0)
-            asyncio.create_task(self.detect_drowsiness(websocket))
+            await self.detect_drowsiness(websocket)
 
     async def stop_detection(self):
         if self.running_event.is_set():
@@ -50,6 +50,7 @@ class DrowsinessDetection:
             cv2.destroyAllWindows()
 
     async def detect_drowsiness(self, websocket: WebSocket):
+        drowsiness_detected = False
         while self.running_event.is_set():
             ret, frame = self.cap.read()
             if not ret:
@@ -67,10 +68,15 @@ class DrowsinessDetection:
                 ear = (leftEAR + rightEAR) / 2.0
                 if ear < thresh:
                     self.flag += 1
-                    if self.flag >= frame_check:
+                    if self.flag >= frame_check and not drowsiness_detected:
                         mixer.music.play()
                         await websocket.send_text('{"alert": "Drowsiness Detected!"}')
+                        drowsiness_detected = True
                 else:
+                    if drowsiness_detected:
+                        print("sending clear msg")
+                        await websocket.send_text('{"alert": "clear"}')
+                        drowsiness_detected = False
                     self.flag = 0
             await asyncio.sleep(0.01)
 
@@ -96,11 +102,3 @@ async def get():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
-
-
-
-
-
-
-
-
